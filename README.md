@@ -13,28 +13,28 @@ Oh, and I also like to write press-releases in what I call "Oprah-speak" for mai
  -->
  
 ## Heading ##
-  > Name the product in a way the reader (i.e. your target customers) will understand.
+  Splitter: Create excerpts of record with the click of a button. 
 
 ## Sub-Heading ##
-  > Describe who the market for the product is and what benefit they get. One sentence only underneath the title.
+  Stop spending valuable attorney and support staff time managing compiling excerpts of record - let Splitter do it for you. 
 
 ## Summary ##
-  > Give a summary of the product and the benefit. Assume the reader will not read anything else so make this paragraph good.
+  You provide Splitter with a table of the page ranges you cite, your file name format, and the files' location.  It compiles your cited page ranges into the single pdf file that you need to submit to the court.  While Spitter does its work, your employees are free to devote their time to other tasks.  
 
-## Problem ##
-  > Describe the problem your product solves.
+## Problem and Solution ##
+  Without splitter, compiling excerpts of record requires hours of human time spent opening pdfs, selecting pages, saving them with a new name, and later compiling all those individual files.  Other applications can help with part of the process, but still require a great deal of human time.  Splitter reduces human input to a minimum and does what computers do best, freeing your attorneys and support staff to do what they do best.  
 
-## Solution ##
-  > Describe how your product elegantly solves the problem.
+<!-- ## Solution ##
+  > Describe how your product elegantly solves the problem. -->
 
 ## Quote from You ##
-  > A quote from a spokesperson in your company.
+  "Created by attorneys, for attorneys, Splitter solves a long-standing problem that no other product had fully addressed."
 
 ## How to Get Started ##
-  > Describe how easy it is to get started.
+  Simply double-click and install the application as you would any other.  (May need to save in the same root directory as the pdf files, at least for version 1.)
 
 ## Customer Quote ##
-  > Provide a quote from a hypothetical customer that describes how they experienced the benefit.
+  "This turned a day-long task into a 30-second one.  Thank you!"
 
 ## Closing and Call to Action ##
-  > Wrap it up and give pointers where the reader should go next.
+  Install the package to your computer.  See the read-me for further instructions. 
