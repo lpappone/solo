@@ -1,5 +1,8 @@
 var fs = require('fs');
-var files, directory, fileNameFormat, regEx, fileRange;
+var csv = require('fast-csv');
+
+var files, directory, fileNameFormat, regEx, fileRange, x, y, csvSorted; 
+var csvData = [];
 var finalFileList = [];
 
 //implement later to allow searching through more than one folder.
@@ -21,31 +24,46 @@ var finalFileList = [];
 // $(document).ready(function() { 
 
 var processFileList = function(filename) {
-  console.log('in process, filename ', filename)
   regEx = /\d+/g;
   fileRange = filename.match(regEx);
-  return fileRange
-}
+  return fileRange;
+};
+
+var processCsvList = function(csvLocation){
+  csv.fromPath(csvLocation).on('record', function(data) {
+      csvData.push(data);
+    }).on('end', function() {
+      csvSorted = csvData.sort(function(a, b) {
+        if (a[0] === b[0]) {
+          x = a[1];
+          y = b[1];
+          if (x > y) {
+            return 1;
+          } else if (x < y) {
+            return -1;
+          } else {
+            return 0;
+          }
+        }
+        return a[0] - b[0]; 
+      });
+      console.log(csvSorted);
+    });
+};
+
 //returns an array of filenames contained in the directory
 var processInputData = function(directory, format) {
   fs.readdir(directory, function(err, files) {
     if (err) {
       console.log("Error getting file list.");
     } else {
-      console.log('files ', files)
       files.forEach(function(filename, index, files) {
         finalFileList.push(processFileList(filename));
-        console.log(finalFileList)
       })
-      console.log('fINAL list ' , finalFileList);
       return finalFileList;
     }
   })
 };
-
-
-
-
 
 $(document).on('submit', '.inputForm', function() {
   directory = $('.recordLocation').val();
@@ -54,7 +72,10 @@ $(document).on('submit', '.inputForm', function() {
   return processInputData(directory, fileNameFormat);
 });
 
-
+$(document).on('submit', '.csvForm', function() {
+  csvLocation = $('.csvLocation').val();
+  return processCsvList(csvLocation);
+})
   
   
 
