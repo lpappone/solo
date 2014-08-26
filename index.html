@@ -7,19 +7,26 @@
     <h1>Splitter</h1>
 
     <form class="inputForm">
-      Please enter an example file name:<input type="text" class="fileNameFormat">
+      <p> Please enter template for your file name. Requirements: As of now, the end of your example file name must be '.pdf'.  If it is not, you are probably not using the correct type of file, and this program will not work correctly.  In addition, your file names must somewhere contain the beginning and ending bates numbers contained in the file. </p> 
+      <p>Alphabetic prefix to first number (if none, enter null): <input type="text" class="fileNameFormat"></p>
+      <p>Number format: If your numbers have leading zeros, simply enter that number of zeros (e.g., if a filename might be "AR0001-AR0159.pdf", you should enter '0000').  If they do not have leading zeros, type null. <input type="text" class="fileNumberFormat"></p>
+      <p>Alphabetic prefix to second number: <input type="text" class="fileNameFormat"></p>
+    
+      
      
       Please enter the directory containing your record files:<input type="text" class="recordLocation">
 
-      <input type="submit" value="Submit">
-    </form> 
+      <!-- <input type="submit" value="Submit"> -->
+    <!-- </form>  -->
 
-    <form class="csvForm">
+   <!--  <form class="csvForm"> -->
     Please enter the path to your csv file:<input type="text" class="csvLocation">
     <input type="submit" value="Submit">
   </form>
 
-    <script var fs= require('fs')></script>
+    <button class='go'>Create!</button>
+
+    <script type="text/javascript" src="/scripts/bluebird.js"></script>
     <script src="bower_components/jquery/dist/jquery.js"></script>
     <script src="main.js"></script>
   </body>
