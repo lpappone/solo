@@ -1,6 +1,8 @@
 var fs = require('fs');
 var csv = require('fast-csv');
 var readit = require('readdir')
+var spawn = require('child_process').spawn;
+var exec = require('child_process').exec;
 // var Promise = require('bluebird');
 // Promise.promisifyAll(fs);
 // Promise.promisifyAll(csv);
@@ -66,9 +68,9 @@ var csvMerge = function(array) {
   for (var i = 1; i < array.length; i++) {
     if (array[i].length !== 0) {
       var prevVal = stack[stack.length-1];
-      if (+array[i][0] > +prevVal[1]) {
+      if (parseInt(array[i][0]) > parseInt(prevVal[1])) {
         stack.push([parseInt(array[i][0]), parseInt(array[i][1])]);
-      } else {
+      } else if (parseInt(array[i][1]) > parseInt(prevVal[1])) {
         var newVal = [parseInt(prevVal[0]), parseInt(array[i][1])];
         stack.pop();
         stack.push(newVal);
@@ -107,6 +109,8 @@ var processCsvList = function(directory, csvLocation, format){
 
 
 var createDocument = function(fileList, citationsList, format) {
+  console.log('FILE LIST', fileList)
+  console.log('CITES LIST', citationsList)
   var prefix1 = format[0];
   var prefix2 = format[2];
   if (format[1] !== null) {
@@ -119,7 +123,7 @@ var createDocument = function(fileList, citationsList, format) {
       result.push(prefix1);
     }
     if (leadingzeros) {
-      var zerosNeeded = leadingzeros - end.length;
+      var zerosNeeded = leadingzeros - begin.toString().length;
       var counter = 0;
       while (counter < zerosNeeded) {
         result.push('0');
@@ -132,7 +136,7 @@ var createDocument = function(fileList, citationsList, format) {
       result.push(prefix2);
     }
     if (leadingzeros) {
-      var zerosNeeded = leadingzeros - end.length;
+      var zerosNeeded = leadingzeros - end.toString().length;
       var counter = 0;
       while (counter < zerosNeeded) {
         result.push('0');
@@ -154,26 +158,45 @@ var createDocument = function(fileList, citationsList, format) {
       // console.log('k=', k);
       // console.log('file=',file);
       if (file[0] <= cite[0] && cite[0] <= file[1] && cite[1] > file[1]) {
-        console.log('in first if');
+        console.log('INSPLICEmanaging citation range --- ', citationsList[i])
         startExtract = cite[0] - file[0] + 1;
         endExtract = file[1] - file[0] + 1; 
         newFileName = [cite[0].toString(), '-', file[1].toString(), '.pdf'].join('');
         finalDocList.push(newFileName); 
-        cmd1 = ['pdftk ', fileToFind(file[0], file[1]), ' cat ', startExtract.toString(), '-', endExtract.toString(), ' output ', cite[0].toString(), '-', file[1].toString(), '.pdf dont_ask'].join('');          
-        // os.popen(cmd1).read() 
-        console.log('cmd1=',cmd1)
         citationsList.splice((i+1), 0, [fileList[k+1][0], cite[1]]); 
+        var inputFile = fileToFind(file[0], file[1]);
+        console.log('FINDING FILE-------', inputFile)
+        var extract = [startExtract.toString(), '-', endExtract.toString()].join('');
+        var outputFile = [cite[0].toString(), '-', file[1].toString(), '.pdf'].join('');
+
+        pdftk = spawn('pdftk', [inputFile, 'cat', extract, 'output', outputFile, 'dont_ask']);
+
+        pdftk.on('exit', function (code) {
+        console.log('Child process exited with exit code '+code);
+        });
+
+        
 
     } else if (cite[0] >= file[0] && cite[0] <= file[1]) {
-      console.log('in second if')
+      console.log('managing citation range --- ', citationsList[i])
       startExtract = cite[0] - file[0] + 1;
       endExtract = cite[1] - file[0] + 1;
       newFileName = [cite[0].toString(), '-', cite[1].toString(), '.pdf'].join('');
       finalDocList.push(newFileName);
       // cmd = 'pdftk ' + str("%05d"%(item[0])) + "-" + str("%05d"%(item[1])) + '.pdf cat ' + str(begin) + '-' + str(end) + ' output ' + str(rng[0]) + '-' + str(rng[1]) + '.pdf dont_ask'
-      cmd = ['pdftk ', fileToFind(file[0], file[1]), ' cat ', startExtract.toString(), '-', endExtract.toString(), ' output ', cite[0].toString(), '-', cite[1].toString(), '.pdf dont_ask'].join('');            
-      console.log('cmd=',cmd)
-      // os.popen(cmd).read() 
+      // cmd = ['pdftk ', fileToFind(file[0], file[1]), ' cat ', startExtract.toString(), '-', endExtract.toString(), ' output ', cite[0].toString(), '-', cite[1].toString(), '.pdf dont_ask'].join('');            
+      // console.log('cmd=',cmd)
+      // var loc = (process.cwd());
+      var inputFile = fileToFind(file[0], file[1]);
+      console.log('FINDING FILE-------', inputFile)
+      var extract = [startExtract.toString(), '-', endExtract.toString()].join('');
+      var outputFile = [cite[0].toString(), '-', cite[1].toString(), '.pdf'].join('');
+      
+      pdftk = spawn('pdftk', [inputFile, 'cat', extract, 'output', outputFile, 'dont_ask']);
+
+      pdftk.on('exit', function (code) {
+        console.log('Child process exited with exit code '+code);
+      });
     }
     }
   }
