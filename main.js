@@ -1,32 +1,21 @@
 var fs = require('fs');
 var csv = require('fast-csv');
 var readit = require('readdir')
+var path = require('path');
 var spawn = require('child_process').spawn;
 var exec = require('child_process').exec;
-// var Promise = require('bluebird');
-// Promise.promisifyAll(fs);
-// Promise.promisifyAll(csv);
 
-var files, directory, format, regEx, fileRange, x, y, csvSorted, fileName; 
+
+var files, directory, regEx, fileRange, x, y, csvSorted, fileName; 
 var csvData = [];
 var finalFileList = [];
+var fileNameStorage = {};
+
 var finalDocList = [];
+var results = [];
 
 //implement later to allow searching through more than one folder.
-// var getRecordFiles = function(directory) {
-//   var recordFiles = [];
-//   fs.readdirSync(dir).forEach(function(file) {
-//     file = directory+'/'+file;
-//     var stat = fs.statSync(file);
 
-//     if (stat && stat.isDirectory()) {
-//       results = results.concat(_getRecordFiles(file));
-//     } else {
-//       results.push(file);
-//     }
-//   });
-//   return results;
-// };
 
 // $(document).ready(function() { 
 
@@ -42,21 +31,38 @@ var processFileList = function(filename) {
 };
 
 //returns an array of filenames contained in the directory
-var processInputData = function(directory, finalCsv, format) {
-  fs.readdir(directory, function(err, files) {
-    if (err) {
-      console.log("Error getting file list.");
-    } else {
-      fileTypeRegEx = /\.pdf$/i;
-      files.forEach(function(filename, index, files) {
-        if (filename && fileTypeRegEx.test(filename)) {
-          finalFileList.push(processFileList(filename));
-        // console.log('INTERIM FILE LIST', finalFileList)
-        }
-      })
-      createDocument(finalFileList, finalCsv, format);
+var processInputData = function(directoryFiles, finalCsv) {
+  // fs.readdir(directory, function(err, files) {
+  //   if (err) {
+  //     console.log("Error getting file list.");
+  //   } else {
+  fileTypeRegEx = /\.pdf$/i;
+  directoryFiles.forEach(function(filename, index, files) {
+    if (filename && fileTypeRegEx.test(filename)) {
+      var processedFileName = processFileList(filename);
+      finalFileList.push(processedFileName);
+      fileNameStorage[processedFileName] = filename; 
+      // console.log('INTERIM FILE LIST', finalFileList)
     }
   })
+  createDocument(finalFileList, finalCsv, fileNameStorage);
+};
+
+var getRecordFiles = function(directory, finalCsv) {
+  fs.readdirSync(directory).forEach(function(filename) {
+    var file = path.resolve(directory, filename);
+    console.log('FILE', file)
+    var stat = fs.statSync(file);
+
+    if (stat && stat.isFile() && filename !== '.DS_Store') {
+      results.push(filename);
+      console.log('pushed results', results);  
+    } else if (stat.isDirectory()) {
+      results = results.concat(getRecordFiles(file, finalCsv));
+    }
+  });
+  console.log('RESULTS', results)
+  processInputData(results, finalCsv);
 };
 
 //called by processCsvList to get rid of duplicates and overlaps
@@ -81,7 +87,7 @@ var csvMerge = function(array) {
 }
 
 //returns a sorted, merged list of cited ranges data
-var processCsvList = function(directory, csvLocation, format){
+var processCsvList = function(directory, csvLocation){
   csv.fromPath(csvLocation).on('record', function(data) {
     if (data.length !== 0) {
       csvData.push(data);
@@ -102,54 +108,69 @@ var processCsvList = function(directory, csvLocation, format){
         return parseInt(a[0]) - parseInt(b[0]); 
       });
       finalCsv = csvMerge(csvSorted);
-      processInputData(directory, finalCsv, format); 
+      console.log('csv in processCSVList', finalCsv)
+      // processInputData(directory, finalCsv); 
+      getRecordFiles(directory, finalCsv);
     });
 };
 
+var buildFinalFile = function(finalDocList) {
+  var finalInput = finalDocList.join(' ');
+  console.log(finalInput)
+  finalpdftk = spawn('pdftk', [finalInput, 'cat output RECORD.pdf dont_ask']);
 
+  finalpdftk.on('exit', function (code) {
+    console.log('Child process exited with exit code '+code);
+  });
+}
 
-var createDocument = function(fileList, citationsList, format) {
+var createDocument = function(fileList, citationsList, fileNameStorage) {
   console.log('FILE LIST', fileList)
   console.log('CITES LIST', citationsList)
-  var prefix1 = format[0];
-  var prefix2 = format[2];
-  if (format[1] !== null) {
-    var leadingzeros = format[1].length;
-  }
+  console.log('NEW OBJ', fileNameStorage)
+  // var prefix1 = format[0];
+  // var prefix2 = format[2];
+  // if (format[1] !== null) {
+  //   var leadingzeros = format[1].length;
+  // }
 
-  var fileToFind = function(begin, end) {
-    var result = [];
-    if (prefix1 !== null) {
-      result.push(prefix1);
-    }
-    if (leadingzeros) {
-      var zerosNeeded = leadingzeros - begin.toString().length;
-      var counter = 0;
-      while (counter < zerosNeeded) {
-        result.push('0');
-        counter++
-      }
-    }
-    result.push(begin.toString());
-    result.push('-');
-    if (prefix2 !== null) {
-      result.push(prefix2);
-    }
-    if (leadingzeros) {
-      var zerosNeeded = leadingzeros - end.toString().length;
-      var counter = 0;
-      while (counter < zerosNeeded) {
-        result.push('0');
-        counter++
-      }
-    }
-    result.push(end.toString());
-    result.push('.pdf');
-    result = result.join('');
-    return result;
-  };
+  // var fileToFind = function(begin, end) {
+  //   var result = [];
+  //   if (prefix1 !== null) {
+  //     result.push(prefix1);
+  //   }
+  //   if (leadingzeros) {
+  //     var zerosNeeded = leadingzeros - begin.toString().length;
+  //     var counter = 0;
+  //     while (counter < zerosNeeded) {
+  //       result.push('0');
+  //       counter++
+  //     }
+  //   }
+  //   result.push(begin.toString());
+  //   result.push('-');
+  //   if (prefix2 !== null) {
+  //     result.push(prefix2);
+  //   }
+  //   if (leadingzeros) {
+  //     var zerosNeeded = leadingzeros - end.toString().length;
+  //     var counter = 0;
+  //     while (counter < zerosNeeded) {
+  //       result.push('0');
+  //       counter++
+  //     }
+  //   }
+  //   result.push(end.toString());
+  //   result.push('.pdf');
+  //   result = result.join('');
+  //   return result;
+  // };
 
   for (var i = 0; i < citationsList.length; i++) {
+    var inputFiles = [];
+    var extracts = [];
+    var outputFiles = [];
+
     var cite = citationsList[i];
     // console.log("i=", i)
     // console.log('cite=', cite)
@@ -158,16 +179,20 @@ var createDocument = function(fileList, citationsList, format) {
       // console.log('k=', k);
       // console.log('file=',file);
       if (file[0] <= cite[0] && cite[0] <= file[1] && cite[1] > file[1]) {
-        console.log('INSPLICEmanaging citation range --- ', citationsList[i])
         startExtract = cite[0] - file[0] + 1;
         endExtract = file[1] - file[0] + 1; 
         newFileName = [cite[0].toString(), '-', file[1].toString(), '.pdf'].join('');
         finalDocList.push(newFileName); 
+        
         citationsList.splice((i+1), 0, [fileList[k+1][0], cite[1]]); 
-        var inputFile = fileToFind(file[0], file[1]);
-        console.log('FINDING FILE-------', inputFile)
+        
+        // var inputFile = fileToFind(file[0], file[1]);
+        var inputFile = fileNameStorage[fileList[k].toString()];
+        inputFiles.push(inputFile);
         var extract = [startExtract.toString(), '-', endExtract.toString()].join('');
+        extracts.push(extract);
         var outputFile = [cite[0].toString(), '-', file[1].toString(), '.pdf'].join('');
+        outputFiles.push(outputFile);
 
         pdftk = spawn('pdftk', [inputFile, 'cat', extract, 'output', outputFile, 'dont_ask']);
 
@@ -175,23 +200,20 @@ var createDocument = function(fileList, citationsList, format) {
         console.log('Child process exited with exit code '+code);
         });
 
-        
-
     } else if (cite[0] >= file[0] && cite[0] <= file[1]) {
-      console.log('managing citation range --- ', citationsList[i])
       startExtract = cite[0] - file[0] + 1;
       endExtract = cite[1] - file[0] + 1;
       newFileName = [cite[0].toString(), '-', cite[1].toString(), '.pdf'].join('');
       finalDocList.push(newFileName);
-      // cmd = 'pdftk ' + str("%05d"%(item[0])) + "-" + str("%05d"%(item[1])) + '.pdf cat ' + str(begin) + '-' + str(end) + ' output ' + str(rng[0]) + '-' + str(rng[1]) + '.pdf dont_ask'
-      // cmd = ['pdftk ', fileToFind(file[0], file[1]), ' cat ', startExtract.toString(), '-', endExtract.toString(), ' output ', cite[0].toString(), '-', cite[1].toString(), '.pdf dont_ask'].join('');            
-      // console.log('cmd=',cmd)
-      // var loc = (process.cwd());
-      var inputFile = fileToFind(file[0], file[1]);
-      console.log('FINDING FILE-------', inputFile)
+  
+      // var inputFile = fileToFind(file[0], file[1]);
+      var inputFile = fileNameStorage[fileList[k].toString()];
+      inputFiles.push(inputFile);
       var extract = [startExtract.toString(), '-', endExtract.toString()].join('');
+      extracts.push(extract);
       var outputFile = [cite[0].toString(), '-', cite[1].toString(), '.pdf'].join('');
-      
+      outputFiles.push(outputFile);
+
       pdftk = spawn('pdftk', [inputFile, 'cat', extract, 'output', outputFile, 'dont_ask']);
 
       pdftk.on('exit', function (code) {
@@ -200,15 +222,22 @@ var createDocument = function(fileList, citationsList, format) {
     }
     }
   }
-  console.log('finalDocList = ', finalDocList)
+////////////////////////////////////////
+// for (var n = 0; n < inputFiles.length; n++) {
+//   n.toString() = spawn('pdftk', [inputFiles[n], 'cat', extract, 'output'])
+// }
+
+
+////////////////////////////////////////
+  console.log('finalDocList = ', finalDocList);
 };
 
 $(document).on('submit', '.inputForm', function() {
   directory = $('.recordLocation').val();
-  format = [$('.fileNameFormat1').val(), $('.fileNumberFormat').val(), $('.fileNameFormat2').val()];
+  // format = [$('.fileNameFormat1').val(), $('.fileNumberFormat').val(), $('.fileNameFormat2').val()];
   csvLocation = $('.csvLocation').val();
   // return createDocument(directory, fileNameFormat, csvLocation);
-  return processCsvList(directory, csvLocation, format);
+  return processCsvList(directory, csvLocation);
 });
 
 // $(document).on('submit', '.csvForm', function() {
