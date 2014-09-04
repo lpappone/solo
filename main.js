@@ -8,16 +8,13 @@ var exec = require('child_process').exec;
 
 var files, directory, regEx, fileRange, x, y, csvSorted, fileName; 
 var csvData = [];
+var interimFileList = [];
 var finalFileList = [];
 var fileNameStorage = {};
 
 var finalDocList = [];
 var results = [];
 
-//implement later to allow searching through more than one folder.
-
-
-// $(document).ready(function() { 
 
 //called by processInputData; extracts numbers from filenames
 var processFileList = function(filename) {
@@ -30,39 +27,46 @@ var processFileList = function(filename) {
   return fileRange;
 };
 
-//returns an array of filenames contained in the directory
+//calls final function, passing sorted file list, processed cite list, and file name storage object
 var processInputData = function(directoryFiles, finalCsv) {
-  // fs.readdir(directory, function(err, files) {
-  //   if (err) {
-  //     console.log("Error getting file list.");
-  //   } else {
+  
   fileTypeRegEx = /\.pdf$/i;
   directoryFiles.forEach(function(filename, index, files) {
     if (filename && fileTypeRegEx.test(filename)) {
       var processedFileName = processFileList(filename);
-      finalFileList.push(processedFileName);
+      interimFileList.push(processedFileName);
       fileNameStorage[processedFileName] = filename; 
-      // console.log('INTERIM FILE LIST', finalFileList)
     }
-  })
+  });
+  finalFileList = interimFileList.sort(function(a,b){
+    if (a[0] > b[0]) {      
+      return 1;
+    } else if (a[0] < b[0]) {
+      return -1;
+    } else {
+      return 0;
+    }
+  });
   createDocument(finalFileList, finalCsv, fileNameStorage);
 };
 
-var getRecordFiles = function(directory, finalCsv) {
-  fs.readdirSync(directory).forEach(function(filename) {
-    var file = path.resolve(directory, filename);
-    console.log('FILE', file)
-    var stat = fs.statSync(file);
+//called by process csvList to get a list of record files from nested directories
+var getRecordFiles = function(directory, finalCsv, callback) {
+  var gatherFiles = function(directory) { 
+    var files = fs.readdirSync(directory); 
+      files.forEach(function(filename) {
+        var file = path.resolve(directory, filename);
+        var stat = fs.statSync(file);
 
-    if (stat && stat.isFile() && filename !== '.DS_Store') {
-      results.push(filename);
-      console.log('pushed results', results);  
-    } else if (stat.isDirectory()) {
-      results = results.concat(getRecordFiles(file, finalCsv));
-    }
-  });
-  console.log('RESULTS', results)
-  processInputData(results, finalCsv);
+        if (stat && stat.isFile() && filename !== '.DS_Store') {
+          results.push(filename);
+        } else if (stat.isDirectory()) {
+          gatherFiles(file);
+        }
+      });
+      return results;
+    };
+  callback(gatherFiles(directory), finalCsv);
 };
 
 //called by processCsvList to get rid of duplicates and overlaps
@@ -108,9 +112,7 @@ var processCsvList = function(directory, csvLocation){
         return parseInt(a[0]) - parseInt(b[0]); 
       });
       finalCsv = csvMerge(csvSorted);
-      console.log('csv in processCSVList', finalCsv)
-      // processInputData(directory, finalCsv); 
-      getRecordFiles(directory, finalCsv);
+      getRecordFiles(directory, finalCsv, processInputData);
     });
 };
 
