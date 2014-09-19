@@ -130,8 +130,9 @@ var createDocument = function(fileList, citationsList, fileNameStorage) {
   console.log('FILE LIST', fileList)
   console.log('CITES LIST', citationsList)
   console.log('NEW OBJ', fileNameStorage)
-
   var childProcessCount = 0; 
+
+  // var buildFile = function()
 
   for (var i = 0; i < citationsList.length; i++) {
     var inputFiles = [];
