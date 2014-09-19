@@ -132,7 +132,21 @@ var createDocument = function(fileList, citationsList, fileNameStorage) {
   console.log('NEW OBJ', fileNameStorage)
   var childProcessCount = 0; 
 
-  // var buildFile = function()
+  var buildFile = function(inputFile, extract, outputFile) {
+    pdftk = spawn('pdftk', [inputFile, 'cat', extract, 'output', outputFile, 'dont_ask']);
+    pdftk.on('exit', function (code) {
+      childProcessCount++;
+      if (childProcessCount === finalDocList.length) {
+        var args = finalDocList.concat(['cat', 'output', 'ER.pdf', 'dont_ask'])
+        var finalpdftk = spawn('pdftk', args);
+        finalpdftk.on('exit', function (code) {
+          console.log('Final child process exited with code '+code);
+        });
+      } else {
+        console.log('Child process exited with exit code '+code);
+      }
+    });
+  };
 
   for (var i = 0; i < citationsList.length; i++) {
     var inputFiles = [];
@@ -143,13 +157,13 @@ var createDocument = function(fileList, citationsList, fileNameStorage) {
     for (var k = 0; k < fileList.length; k++) {
       var file = fileList[k];
       //if the first page of the cited range is within the file's range, and the last page of
-      //the cited range is beyond the last page of the cited file
+      //the cited range is beyond the last page of the file
       if (file[0] <= cite[0] && cite[0] <= file[1] && cite[1] > file[1]) {
         startExtract = cite[0] - file[0] + 1;
         endExtract = file[1] - file[0] + 1; 
         newFileName = [cite[0].toString(), '-', file[1].toString(), '.pdf'].join('');
         finalDocList.push(newFileName); 
-        
+        //insert the end of the cited range into the list of ranges
         citationsList.splice((i+1), 0, [fileList[k+1][0], cite[1]]); 
         
         var inputFile = fileNameStorage[fileList[k].toString()];
@@ -159,21 +173,11 @@ var createDocument = function(fileList, citationsList, fileNameStorage) {
         var outputFile = [cite[0].toString(), '-', file[1].toString(), '.pdf'].join('');
         outputFiles.push(outputFile);
 
-        pdftk = spawn('pdftk', [inputFile, 'cat', extract, 'output', outputFile, 'dont_ask']);
-        pdftk.on('exit', function (code) {
-          childProcessCount++;
-          if (childProcessCount === finalDocList.length) {
-            var finalpdftk = spawn('pdftk', [finalInput, 'cat', 'output', 'ER.pdf', 'dont_ask']);
-            finalpdftk.on('exit', function (code) {
-              console.log('Final child process exited with code '+code);
-            });
-          } else {
-            console.log('Child process exited with exit code '+code);
-          }
-        });
+        buildFile(inputFile, extract, outputFile);
 
-      } else if (cite[0] >= file[0] && cite[0] <= file[1]) {
-        console.log('SMASH!!!!!!!')
+      //if the first page of the cited range is within the file's range.  If we get here, the end of
+      //the cited range must also be within the file
+      } else if (file[0] <= cite[0] && cite[0] <= file[1]) {
 
         startExtract = cite[0] - file[0] + 1;
         endExtract = cite[1] - file[0] + 1;
@@ -187,29 +191,10 @@ var createDocument = function(fileList, citationsList, fileNameStorage) {
         var outputFile = [cite[0].toString(), '-', cite[1].toString(), '.pdf'].join('');
         outputFiles.push(outputFile);
 
-        pdftk = spawn('pdftk', [inputFile, 'cat', extract, 'output', outputFile, 'dont_ask']);
-        pdftk.on('exit', function (code) {
-          childProcessCount++;
-          if (childProcessCount === finalDocList.length) {
-            var args = finalDocList.concat(['cat', 'output', 'ER.pdf', 'dont_ask'])
-            var finalpdftk = spawn('pdftk', args);
-
-            finalpdftk.on('exit', function (code) {
-              console.log('Final child process exited with code '+code);
-            });
-
-            finalpdftk.stderr.on('data', function(data) {
-              console.log('22222 STDERRR!!!!', data);
-            })
-          } else {
-            console.log('fdL length = ', finalDocList.length, ' cpc = ', childProcessCount);
-            console.log('Child process exited with exit code '+code);
-          }
-        });
+        buildFile(inputFile, extract, outputFile);
       }
     }
   }
-
   console.log('finalDocList = ', finalDocList);
   var finalInput = finalDocList.join(' ');
 
