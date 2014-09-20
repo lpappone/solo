@@ -116,16 +116,6 @@ var processCsvList = function(directory, csvLocation){
     });
 };
 
-var buildFinalFile = function(finalDocList) {
-  var finalInput = finalDocList.join(' ');
-  console.log(finalInput)
-  finalpdftk = spawn('pdftk', [finalInput, 'cat output RECORD.pdf dont_ask']);
-
-  finalpdftk.on('exit', function (code) {
-    console.log('Child process exited with exit code '+code);
-  });
-}
-
 var createDocument = function(fileList, citationsList, fileNameStorage) {
   console.log('FILE LIST', fileList)
   console.log('CITES LIST', citationsList)
@@ -156,43 +146,32 @@ var createDocument = function(fileList, citationsList, fileNameStorage) {
     var cite = citationsList[i];
     for (var k = 0; k < fileList.length; k++) {
       var file = fileList[k];
-      //if the first page of the cited range is within the file's range, and the last page of
-      //the cited range is beyond the last page of the file
-      if (file[0] <= cite[0] && cite[0] <= file[1] && cite[1] > file[1]) {
+      if (file[0] <= cite[0] && cite[0] <= file[1]) {
+        var endOfFileCalc = cite[1];
+        var needInsertNewFile = false;
+        if (cite[1] > file[1]) {
+          endOfFileCalc = file[1];
+          needInsertNewFile = true; 
+        }
+
         startExtract = cite[0] - file[0] + 1;
-        endExtract = file[1] - file[0] + 1; 
-        newFileName = [cite[0].toString(), '-', file[1].toString(), '.pdf'].join('');
+        endExtract = endOfFileCalc - file[0] + 1;
+        newFileName = [cite[0].toString(), '-', endOfFileCalc.toString(), '.pdf'].join('');
         finalDocList.push(newFileName); 
-        //insert the end of the cited range into the list of ranges
-        citationsList.splice((i+1), 0, [fileList[k+1][0], cite[1]]); 
+        if (needInsertNewFile) {
+          //insert the end of the cited range into the list of ranges
+          citationsList.splice((i+1), 0, [fileList[k+1][0], cite[1]]); 
+        }
         
         var inputFile = fileNameStorage[fileList[k].toString()];
         inputFiles.push(inputFile);
         var extract = [startExtract.toString(), '-', endExtract.toString()].join('');
         extracts.push(extract);
-        var outputFile = [cite[0].toString(), '-', file[1].toString(), '.pdf'].join('');
+        var outputFile = [cite[0].toString(), '-', endOfFileCalc.toString(), '.pdf'].join('');
         outputFiles.push(outputFile);
 
         buildFile(inputFile, extract, outputFile);
-
-      //if the first page of the cited range is within the file's range.  If we get here, the end of
-      //the cited range must also be within the file
-      } else if (file[0] <= cite[0] && cite[0] <= file[1]) {
-
-        startExtract = cite[0] - file[0] + 1;
-        endExtract = cite[1] - file[0] + 1;
-        newFileName = [cite[0].toString(), '-', cite[1].toString(), '.pdf'].join('');
-        finalDocList.push(newFileName);
-    
-        var inputFile = fileNameStorage[fileList[k].toString()];
-        inputFiles.push(inputFile);
-        var extract = [startExtract.toString(), '-', endExtract.toString()].join('');
-        extracts.push(extract);
-        var outputFile = [cite[0].toString(), '-', cite[1].toString(), '.pdf'].join('');
-        outputFiles.push(outputFile);
-
-        buildFile(inputFile, extract, outputFile);
-      }
+      } 
     }
   }
   console.log('finalDocList = ', finalDocList);
