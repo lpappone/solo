@@ -7,20 +7,18 @@ var exec = require('child_process').exec;
 
 var csvData = [];
 var fileNameStorage = {};
-var interimFileList = [];
 var finalFileList = [];
 
-var files, directory, fileRange, x, y, fileName; 
+var files, directory, fileName; 
 
 var finalDocList = [];
-var results = [];
 
 
 //called by processInputData; extracts numbers from filenames
 var processFileList = function(filename) {
   var regEx = /\d+/g;
   var strFileRange = filename.match(regEx);
-  fileRange = []; 
+  var fileRange = []; 
   for (var i = 0; i < strFileRange.length; i++) {
     fileRange.push(parseInt(strFileRange[i]));
   }  
@@ -29,7 +27,7 @@ var processFileList = function(filename) {
 
 //calls final function, passing sorted file list, processed cite list, and file name storage object
 var processInputData = function(directoryFiles, finalCsv) {
-  
+  var interimFileList = [];
   var fileTypeRegEx = /\.pdf$/i;
   directoryFiles.forEach(function(filename, index, files) {
     if (filename && fileTypeRegEx.test(filename)) {
@@ -52,6 +50,7 @@ var processInputData = function(directoryFiles, finalCsv) {
 
 //called by process csvList to get a list of record files from nested directories
 var getRecordFiles = function(directory, finalCsv, callback) {
+  var results = [];
   var gatherFiles = function(directory) { 
     var files = fs.readdirSync(directory); 
       files.forEach(function(filename) {
@@ -99,8 +98,8 @@ var processCsvList = function(directory, csvLocation){
     }).on('end', function() {
       var csvSorted = csvData.sort(function(a, b) {
         if (a[0] === b[0]) {
-          x = parseInt(a[1]);
-          y = parseInt(b[1]);
+          var x = parseInt(a[1]);
+          var y = parseInt(b[1]);
           if (x > y) {
             return 1;
           } else if (x < y) {
