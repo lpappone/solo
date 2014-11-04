@@ -4,7 +4,6 @@ var readit = require('readdir')
 var path = require('path');
 var spawn = require('child_process').spawn;
 var exec = require('child_process').exec;
-
 var recursive = require('recursive-readdir');
 var p = require('path')
 
@@ -19,7 +18,6 @@ var finalDocList = [];
 
 //called by processInputData; extracts numbers from filenames
 var processFileList = function(filename) {
-  console.log(filename)
   var regEx = /\d+/g;
   var strFileRange = filename.match(regEx);
   var fileRange = []; 
@@ -80,6 +78,15 @@ var getRecordFiles = function(directory, finalCsv, callback) {
           console.log("RESULTS", results)
 
 
+  // var results = [];
+  // var gatherFiles = function(directory) { 
+  //   var files = fs.readdirSync(directory); 
+  //     files.forEach(function(filename) {
+  //       var file = path.resolve(directory, filename);
+  //       var stat = fs.statSync(file);
+
+  //       if (stat && stat.isFile() && filename !== '.DS_Store') {
+  //         results.push(filename);
         } else if (stat.isDirectory()) {
           gatherFiles(file);
         }
@@ -141,6 +148,7 @@ var createDocument = function(fileList, citationsList, fileNameStorage) {
   console.log('FILE LIST', fileList)
   console.log('CITES LIST', citationsList)
   console.log('FILE NAME STORAGE', fileNameStorage)
+
   var childProcessCount = 0; 
 
   var buildFile = function(inputFile, extract, outputFile) {
@@ -190,10 +198,7 @@ var createDocument = function(fileList, citationsList, fileNameStorage) {
         extracts.push(extract);
         var outputFile = [cite[0].toString(), '-', endOfFileCalc.toString(), '.pdf'].join('');
         outputFiles.push(outputFile);
-        
-        console.log('buildingFile: ', 'inputFile: ', inputFile);
-        console.log('extract: ', extract);
-        console.log('outputFile: ', outputFile);
+
         buildFile(inputFile, extract, outputFile);
       } 
     }
