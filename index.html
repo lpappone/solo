@@ -2,33 +2,32 @@
 <html>
   <head>
     <title>Splitter</title>
+    <link rel="stylesheet" type="text/css" media="all" href="styles.css" />
+
   </head>
   <body>
     <h1>Splitter</h1>
 
+    <input class="hiddenDialogs" id="fileDialog-folder" type="file" nwdirectory />
+    <input class="hiddenDialogs" id="fileDialog-savefolder" type="file" nwdirectory />
+    <input class="hiddenDialogs" id="fileDialog-file" type="file" />
+
     <form class="inputForm">
-      <!-- <p> Please enter template for your file name. Requirements: As of now, the end of your example file name must be '.pdf'.  If it is not, you are probably not using the correct type of file, and this program will not work correctly.  In addition, your file names must somewhere contain the beginning and ending bates numbers contained in the file. </p> 
-
-      <p>Alphabetic prefix to first number (if none, enter null). <input type="text" class="fileNameFormat1"></p>
-
-      <p>Number format: If your numbers have leading zeros, simply enter that number of zeros (e.g., if a filename might be "AR0001-AR0159.pdf", you should enter '0000').  If they do not have leading zeros, type null. <input type="text" class="fileNumberFormat"></p>
-      
-      <p>Alphabetic prefix to second number. <input type="text" class="fileNameFormat2"></p> -->
     
-      <p>Please enter the directory containing your record files. Your files must be pdf files (the end of the filenames should be ".pdf".  In addition, your file names must somewhere contain the beginning and ending bates numbers contained in the file. <input type="text" class="recordLocation">
-      </p>
+      <p><strong>Where are your record files?</strong> Your files must be pdf files (the end of the filenames should be ".pdf". In addition, your file names must somewhere contain the beginning and ending bates numbers contained in the file. You shouldn't have other pdf files in this same location, because that will confuse your computer.</p> 
+      <input type="text" id="recordLocation"> or <button type="button" id="directoryBrowse">Browse...</button>   
 
-      <!-- <input type="submit" value="Submit"> -->
-    <!-- </form>  -->
+      <p><strong>Where is your CSV file?</strong> Your cited ranges should be in a spreadsheet with two columns. There should be one row for each citation. The first column should be the start page number and the second column should be the end page number. If you have this saved as an excel spreadsheet, resave it as a .csv file instead.</p>  
+      <input type="text" id="csvLocation"> or <button type="button" id="csvBrowse">Browse...</button>
 
-   <!--  <form class="csvForm"> -->
-    Please enter the path to your csv file:<input type="text" class="csvLocation">
-    <input type="submit" value="Submit">
+      <p><strong>Where do you want your new files saved?</strong> Your excerpts of record file will be a pdf called "Excerpts_of_Record." We'll also produce a variety of files containing your cited ranges. (They may not match the ranges precisely, but don't worry, all your pages are there.) You can safely delete these files if you wish.</p>  
+      <input type="text" id="savedFilesLocation"> or <button type="button" id="savedFilesBrowse">Browse...</button>
+
+    <button class="submit go">Go!</button>
   </form>
 
-    <button class='go'>Create!</button>
+    
 
-    <script type="text/javascript" src="/scripts/bluebird.js"></script>
     <script src="bower_components/jquery/dist/jquery.js"></script>
     <script src="main.js"></script>
   </body>

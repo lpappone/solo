@@ -1,0 +1,49 @@
+
+.hiddenDialogs {
+  display: none; 
+}
+
+h1 {
+  font-family: 'Lucida Grande', Helvetica, Arial, Sans-Serif;
+  width: 100px;
+  margin-left: auto;
+  margin-right: auto;
+  color: #4011BF;
+}
+
+.go {
+  display: block;
+  margin: 15px;
+  width: 20%;
+  margin-left: auto;
+  margin-right: auto;
+  border-top: 1px solid #96d1f8;
+  background: #1e44cc;
+  background: -webkit-gradient(linear, left top, left bottom, from(#423e9c), to(#1e44cc));
+  background: -webkit-linear-gradient(top, #423e9c, #1e44cc);
+  background: -moz-linear-gradient(top, #423e9c, #1e44cc);
+  background: -ms-linear-gradient(top, #423e9c, #1e44cc);
+  background: -o-linear-gradient(top, #423e9c, #1e44cc);
+  padding: 8px 16px;
+  -webkit-border-radius: 6px;
+  -moz-border-radius: 6px;
+  border-radius: 6px;
+  -webkit-box-shadow: rgba(0,0,0,1) 0 1px 0;
+  -moz-box-shadow: rgba(0,0,0,1) 0 1px 0;
+  box-shadow: rgba(0,0,0,1) 0 1px 0;
+  text-shadow: rgba(0,0,0,.4) 0 1px 0;
+  color: #000000;
+  font-size: 15px;
+  font-family: 'Lucida Grande', Helvetica, Arial, Sans-Serif;
+  text-decoration: none;
+}
+.go:hover {
+   border-top-color: #210a91;
+   background: #210a91;
+   color: #ccc;
+   }
+.go:active {
+   border-top-color: #091982;
+   background: #091982;
+   }
+}

@@ -11,7 +11,7 @@ var csvData = [];
 var fileNameStorage = {};
 var finalFileList = [];
 
-var files, fileName; 
+var files, fileName, directory, savedFilesFolder; 
 
 var finalDocList = [];
 
@@ -54,7 +54,7 @@ var processInputData = function(directoryFiles, finalCsv) {
 };
 
 //called by process csvList to get a list of record files from nested directories
-var getRecordFiles = function(directory, finalCsv, callback) {
+var getRecordFiles = function(finalCsv, callback) {
   console.log('getRecordFiles: ', directory, finalCsv, callback)
   var results = [];
   recursive(directory, function (err, files) {
@@ -66,27 +66,13 @@ var getRecordFiles = function(directory, finalCsv, callback) {
   
   var gatherFiles = function(directory) { 
     var files = fs.readdirSync(directory); 
-    // console.log('gathered', files)
       files.forEach(function(filename) {
         var file = path.resolve(directory, filename);
-        // console.log("FILE", file)
-        // var stat = fs.statSync(p.join(directory, file));
         var stat = fs.statSync(file)
 
         if (stat && stat.isFile() && filename !== '.DS_Store') {
           results.push([file, filename])
           console.log("RESULTS", results)
-
-
-  // var results = [];
-  // var gatherFiles = function(directory) { 
-  //   var files = fs.readdirSync(directory); 
-  //     files.forEach(function(filename) {
-  //       var file = path.resolve(directory, filename);
-  //       var stat = fs.statSync(file);
-
-  //       if (stat && stat.isFile() && filename !== '.DS_Store') {
-  //         results.push(filename);
         } else if (stat.isDirectory()) {
           gatherFiles(file);
         }
@@ -118,7 +104,7 @@ var csvMerge = function(array) {
 }
 
 //returns a sorted, merged list of cited ranges data
-var processCsvList = function(directory, csvLocation){
+var processCsvList = function(csvLocation){
   console.log('processCsvList: ', directory, csvLocation);
   csv.fromPath(csvLocation).on('record', function(data) {
     if (data.length !== 0) {
@@ -140,7 +126,7 @@ var processCsvList = function(directory, csvLocation){
         return parseInt(a[0]) - parseInt(b[0]); 
       });
       var finalCsv = csvMerge(csvSorted);
-      getRecordFiles(directory, finalCsv, processInputData);
+      getRecordFiles(finalCsv, processInputData);
     });
 };
 
@@ -148,6 +134,7 @@ var createDocument = function(fileList, citationsList, fileNameStorage) {
   console.log('FILE LIST', fileList)
   console.log('CITES LIST', citationsList)
   console.log('FILE NAME STORAGE', fileNameStorage)
+  console.log('SAVED LOCATION', savedFilesFolder)
 
   var childProcessCount = 0; 
 
@@ -156,7 +143,8 @@ var createDocument = function(fileList, citationsList, fileNameStorage) {
     pdftk.on('exit', function (code) {
       childProcessCount++;
       if (childProcessCount === finalDocList.length) {
-        var args = finalDocList.concat(['cat', 'output', 'ER.pdf', 'dont_ask'])
+        var finalFile = savedFilesFolder + '/Excerpts_of_Record.pdf'
+        var args = finalDocList.concat(['cat', 'output', finalFile, 'dont_ask'])
         var finalpdftk = spawn('pdftk', args);
         finalpdftk.on('exit', function (code) {
           console.log('Final child process exited with code '+code);
@@ -185,7 +173,7 @@ var createDocument = function(fileList, citationsList, fileNameStorage) {
 
         startExtract = cite[0] - file[0] + 1;
         endExtract = endOfFileCalc - file[0] + 1;
-        newFileName = [cite[0].toString(), '-', endOfFileCalc.toString(), '.pdf'].join('');
+        newFileName = [savedFilesFolder, '/', cite[0].toString(), '-', endOfFileCalc.toString(), '.pdf'].join('');
         finalDocList.push(newFileName); 
         if (needInsertNewFile) {
           //insert the end of the cited range into the list of ranges
@@ -196,7 +184,7 @@ var createDocument = function(fileList, citationsList, fileNameStorage) {
         inputFiles.push(inputFile);
         var extract = [startExtract.toString(), '-', endExtract.toString()].join('');
         extracts.push(extract);
-        var outputFile = [cite[0].toString(), '-', endOfFileCalc.toString(), '.pdf'].join('');
+        var outputFile = [savedFilesFolder + '/' + cite[0].toString(), '-', endOfFileCalc.toString(), '.pdf'].join('');
         outputFiles.push(outputFile);
 
         buildFile(inputFile, extract, outputFile);
@@ -209,8 +197,29 @@ var createDocument = function(fileList, citationsList, fileNameStorage) {
 };
 
 $(document).on('submit', '.inputForm', function() {
-  var directory = $('.recordLocation').val();
-  var csvLocation = $('.csvLocation').val();
-  return processCsvList(directory, csvLocation);
+  directory = $('#recordLocation').val();
+  var csvLocation = $('#csvLocation').val();
+  savedFilesFolder = $('#savedFilesLocation').val(); 
+  return processCsvList(csvLocation);
 });
+
+$(document).on('click', '#directoryBrowse', function() {
+  chooseFile('#fileDialog-folder', 'recordLocation');
+});
+
+$(document).on('click', '#csvBrowse', function() {
+  chooseFile('#fileDialog-file', 'csvLocation');
+});
+
+$(document).on('click', '#savedFilesBrowse', function() {
+  chooseFile('#fileDialog-savefolder', 'savedFilesLocation');
+});
+
+function chooseFile(name, inputField) {
+  var chooser = document.querySelector(name);
+  chooser.addEventListener("change", function(event) {
+    document.getElementById(inputField).value = this.value;
+  }, false);
+  chooser.click();
+}
 
